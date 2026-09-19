@@ -1,0 +1,15 @@
+{
+  "filename": "config.py",
+  "path": "Doc-processor\\doc-processor\\src\\doc_processor\\core\\config.py",
+  "version": "1.1",
+  "files": {},
+  "promptMessage": {
+    "8890ef8f": {
+      "value": "uv add sqlalchemy asyncpg alembic pydantic-settings\nResolved 57 packages in 1ms\n░░░░░░░░░░░░░░░░░░░░ [0/50] Installing wheels...                                                                                                            warning: Failed to hardlink files; falling back to full copy. This may lead to degraded performance.\n         If the cache and target directories are on different filesystems, hardlinking may not be supported.\n         If this is intentional, set `export UV_LINK_M"
+    }
+  },
+  "localPrompts": {},
+  "remotePrompts": {},
+  "figma": {},
+  "jira": {}
+}

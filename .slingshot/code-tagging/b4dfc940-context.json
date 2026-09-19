@@ -1,0 +1,15 @@
+{
+  "filename": "requirements.txt",
+  "path": "Doc-processor\\doc-processor\\requirements.txt",
+  "version": "1.1",
+  "files": {},
+  "promptMessage": {
+    "c5fd3996": {
+      "value": ".\\venv\\Scripts\\Activate.ps1\n.\\venv\\Scripts\\Activate.ps1 : The term '.\\venv\\Scripts\\Activate.ps1' is not recognized as the name of a cmdlet, function, \nscript file, or operable program. Check the spelling of the name, or if a path was incl"
+    }
+  },
+  "localPrompts": {},
+  "remotePrompts": {},
+  "figma": {},
+  "jira": {}
+}
