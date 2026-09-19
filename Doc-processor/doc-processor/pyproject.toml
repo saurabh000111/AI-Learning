@@ -1,0 +1,37 @@
+[project]
+name = "doc-processor"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "saurabh000111", email = "32452795+saurabh000111@users.noreply.github.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "alembic>=1.20.0",
+    "asyncpg>=0.31.0",
+    "fastapi[standard]>=0.115.0",
+    "pydantic-settings>=2.7.0",
+    "sqlalchemy>=2.0.54",
+]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.0",
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.25.0",
+    "ruff>=0.8.0",
+]
+
+[tool.uv]
+package = true
+
+[tool.fastapi]
+entrypoint = "doc_processor.main:app"
+
+[project.scripts]
+doc-processor = "doc_processor:main"
+
+[build-system]
+requires = ["uv_build>=0.12.16,<0.13.0"]
+build-backend = "uv_build"
