@@ -438,3 +438,9 @@ docs/
 ```
 
 This keeps Docker operational notes separate from the main `README.md`.
+
+
+
+## 21 sept 2026 updated
+## docker 
+docker compose exec postgres psql -U doc_user -d doc_processor

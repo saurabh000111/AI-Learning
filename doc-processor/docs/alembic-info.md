@@ -1,0 +1,666 @@
+# Alembic Quick Reference --- FastAPI + SQLAlchemy + PostgreSQL
+
+> Project reference for managing PostgreSQL schema changes with Alembic.
+
+## 1. What is Alembic?
+
+Alembic is the database migration tool commonly used with SQLAlchemy.
+
+When a SQLAlchemy model changes, Alembic can compare `Base.metadata`
+with the current database schema and generate a migration.
+
+``` text
+SQLAlchemy Models
+      |
+      v
+ Base.metadata
+      |
+      v
+Alembic --autogenerate
+      |
+      | compares with
+      v
+PostgreSQL Schema
+      |
+      v
+Migration File
+      |
+      v
+alembic upgrade head
+```
+
+**Important:** Alembic manages database **schema changes**, not normal
+application data.
+
+------------------------------------------------------------------------
+
+## 2. Initial Setup
+
+Install Alembic:
+
+``` bash
+pip install alembic
+```
+
+Initialize it once per project:
+
+``` bash
+alembic init alembic
+```
+
+This creates:
+
+``` text
+alembic/
+├── env.py
+├── script.py.mako
+└── versions/
+
+alembic.ini
+```
+
+  File                  Purpose
+  --------------------- -------------------------------------------------
+  `alembic.ini`         Main Alembic configuration
+  `alembic/env.py`      Connects Alembic to SQLAlchemy and the database
+  `alembic/versions/`   Generated migration scripts
+  `script.py.mako`      Template used to create migration files
+
+------------------------------------------------------------------------
+
+## 3. Configure `env.py`
+
+Alembic needs two things:
+
+1.  Database connection URL.
+2.  SQLAlchemy model metadata.
+
+Typical configuration:
+
+``` python
+from app.core.config import settings
+from app.db.base import Base
+
+# Import models so their tables are registered in Base.metadata.
+from app.models.user import User  # noqa: F401
+
+config.set_main_option(
+    "sqlalchemy.url",
+    settings.DATABASE_URL,
+)
+
+target_metadata = Base.metadata
+```
+
+### Why `Base.metadata`?
+
+Alembic uses it to discover the tables, columns, indexes, and
+constraints defined by SQLAlchemy.
+
+``` python
+target_metadata = Base.metadata
+```
+
+Without it, `--autogenerate` cannot correctly detect your model changes.
+
+### Why import models?
+
+`Base.metadata` only knows about models that Python has loaded.
+
+For larger applications, a common pattern is to have a module such as:
+
+``` python
+# app/db/base.py
+
+from app.db.base_class import Base
+from app.models.user import User  # noqa: F401
+```
+
+Then import that populated `Base` from `alembic/env.py`.
+
+------------------------------------------------------------------------
+
+## 4. Database URL
+
+Example when Alembic runs on the host machine and PostgreSQL runs in
+Docker:
+
+``` env
+DATABASE_URL=postgresql+psycopg://postgres:password@localhost:5433/doc_processor
+```
+
+Given:
+
+``` yaml
+ports:
+  - "5433:5432"
+```
+
+the mapping is:
+
+``` text
+Host machine       Docker PostgreSQL
+localhost:5433  -> container:5432
+```
+
+Therefore host-side Alembic connects to `localhost:5433`.
+
+If both the application/Alembic and PostgreSQL run inside the same
+Docker Compose network, the URL usually uses the service name and
+container port:
+
+``` text
+postgresql+psycopg://postgres:password@postgres:5432/doc_processor
+```
+
+### Security
+
+Do not commit real database passwords.
+
+Add `.env` to `.gitignore`:
+
+``` gitignore
+.env
+```
+
+For production, use your deployment platform's secret management instead
+of storing credentials in source control.
+
+------------------------------------------------------------------------
+
+# Daily Alembic Workflow
+
+## 5. Start PostgreSQL
+
+``` bash
+docker compose up -d postgres
+```
+
+**What:** Starts the PostgreSQL container.
+
+**Why:** Alembic needs access to the current database when using
+`--autogenerate`.
+
+Check container status:
+
+``` bash
+docker compose ps
+```
+
+View PostgreSQL logs:
+
+``` bash
+docker compose logs postgres
+```
+
+Follow logs continuously:
+
+``` bash
+docker compose logs -f postgres
+```
+
+------------------------------------------------------------------------
+
+## 6. Create a Migration
+
+After changing a SQLAlchemy model:
+
+``` bash
+alembic revision --autogenerate -m "create users table"
+```
+
+**What:** Compares SQLAlchemy metadata with the current database schema
+and generates a migration.
+
+**Why:** Converts model/schema differences into version-controlled
+database changes.
+
+Example:
+
+``` text
+Detected added table 'users'
+Detected added index 'ix_users_email'
+```
+
+A file is generated under:
+
+``` text
+alembic/versions/
+```
+
+Example:
+
+``` text
+f390b25d2719_create_users_table.py
+```
+
+------------------------------------------------------------------------
+
+## 7. Review the Migration BEFORE Applying It
+
+Open the generated migration and inspect:
+
+``` python
+def upgrade() -> None:
+    ...
+```
+
+and:
+
+``` python
+def downgrade() -> None:
+    ...
+```
+
+`upgrade()` describes how to move the database forward.
+
+`downgrade()` describes how to roll back that migration.
+
+**Production rule:** Never assume an autogenerated migration is correct.
+Review it before applying it.
+
+------------------------------------------------------------------------
+
+## 8. Apply Migrations
+
+``` bash
+alembic upgrade head
+```
+
+**What:** Applies all pending migrations.
+
+**Why:** Brings the database to the latest migration version.
+
+`head` means the latest migration revision.
+
+------------------------------------------------------------------------
+
+## 9. Check Current Version
+
+``` bash
+alembic current
+```
+
+**What:** Shows the revision currently applied to the database.
+
+Example:
+
+``` text
+f390b25d2719 (head)
+```
+
+------------------------------------------------------------------------
+
+## 10. View Migration History
+
+``` bash
+alembic history
+```
+
+**What:** Displays migration revisions.
+
+More detailed output:
+
+``` bash
+alembic history --verbose
+```
+
+------------------------------------------------------------------------
+
+# Rollback
+
+## 11. Roll Back One Migration
+
+``` bash
+alembic downgrade -1
+```
+
+**What:** Reverts one migration.
+
+**Why:** Useful during development when the latest schema change must be
+undone.
+
+Be careful in production: a downgrade may remove columns/tables and
+therefore destroy data.
+
+------------------------------------------------------------------------
+
+## 12. Roll Back to a Specific Revision
+
+``` bash
+alembic downgrade <revision_id>
+```
+
+Example:
+
+``` bash
+alembic downgrade f390b25d2719
+```
+
+The database is moved to the specified revision.
+
+------------------------------------------------------------------------
+
+## 13. Upgrade to a Specific Revision
+
+``` bash
+alembic upgrade <revision_id>
+```
+
+Useful when you intentionally do not want to move all the way to `head`.
+
+------------------------------------------------------------------------
+
+# Useful Commands
+
+  -------------------------------------------------------------------------------------------------
+  Command                                          What it does            When to use
+  ------------------------------------------------ ----------------------- ------------------------
+  `alembic init alembic`                           Initializes Alembic     Once when setting up
+                                                                           project
+
+  `alembic revision --autogenerate -m "message"`   Generates migration     After schema/model
+                                                   from model changes      changes
+
+  `alembic revision -m "message"`                  Creates an empty/manual Custom SQL/schema
+                                                   migration               operations
+
+  `alembic upgrade head`                           Applies all pending     Normal
+                                                   migrations              deployment/development
+
+  `alembic upgrade +1`                             Applies the next        Step-by-step upgrade
+                                                   migration               
+
+  `alembic downgrade -1`                           Reverts one migration   Development/controlled
+                                                                           rollback
+
+  `alembic current`                                Shows current DB        Verify database state
+                                                   revision                
+
+  `alembic history`                                Shows migration history Inspect revision chain
+
+  `alembic heads`                                  Shows latest migration  Diagnose branches
+                                                   head(s)                 
+
+  `alembic show <revision>`                        Shows a revision's      Inspect a migration
+                                                   details                 
+
+  `alembic stamp head`                             Marks DB as current     Special
+                                                   without running         recovery/baseline cases
+                                                   migrations              only
+  -------------------------------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+
+# PostgreSQL Verification
+
+Connect to PostgreSQL running in Docker:
+
+``` bash
+docker compose exec postgres psql -U postgres -d <database_name>
+```
+
+List tables:
+
+``` sql
+\dt
+```
+
+Inspect a table:
+
+``` sql
+\d users
+```
+
+View Alembic's current recorded revision:
+
+``` sql
+SELECT * FROM alembic_version;
+```
+
+Exit:
+
+``` text
+\q
+```
+
+Alembic automatically maintains the `alembic_version` table.
+
+------------------------------------------------------------------------
+
+# Common Workflow Example
+
+Suppose we add this field:
+
+``` python
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    email: Mapped[str] = mapped_column(
+        String(255),
+        unique=True,
+        index=True,
+    )
+    full_name: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+    )
+```
+
+Generate the migration:
+
+``` bash
+alembic revision --autogenerate -m "add full name to users"
+```
+
+Review the generated file.
+
+Then:
+
+``` bash
+alembic upgrade head
+```
+
+Verify:
+
+``` bash
+alembic current
+```
+
+Normal cycle:
+
+``` text
+Change SQLAlchemy model
+        |
+        v
+Generate migration
+        |
+        v
+Review migration
+        |
+        v
+Apply migration
+        |
+        v
+Verify database
+        |
+        v
+Commit model + migration together
+```
+
+------------------------------------------------------------------------
+
+# Troubleshooting
+
+## Connection Refused
+
+First check:
+
+``` bash
+docker compose ps
+```
+
+Then:
+
+``` bash
+docker compose logs postgres
+```
+
+Confirm that the port in `DATABASE_URL` matches the **host port**
+exposed by Docker.
+
+For:
+
+``` yaml
+ports:
+  - "5433:5432"
+```
+
+host-side Alembic should use:
+
+``` text
+localhost:5433
+```
+
+not:
+
+``` text
+localhost:5432
+```
+
+------------------------------------------------------------------------
+
+## Alembic Says No Changes Detected
+
+Typical causes:
+
+1.  `target_metadata = None`.
+2.  The model module was never imported.
+3.  The model uses a different SQLAlchemy `Base`.
+4.  You changed Python code that does not change the DB schema.
+5.  Alembic is connecting to a different database than expected.
+
+Check:
+
+``` python
+target_metadata = Base.metadata
+```
+
+and ensure your models are imported.
+
+------------------------------------------------------------------------
+
+## Authentication Failed
+
+Check that these values match the actual initialized PostgreSQL
+instance:
+
+``` text
+POSTGRES_USER
+POSTGRES_PASSWORD
+POSTGRES_DB
+DATABASE_URL
+```
+
+Important: PostgreSQL Docker initialization variables are mainly used
+when the database volume is first created.
+
+If logs say:
+
+``` text
+PostgreSQL Database directory appears to contain a database;
+Skipping initialization
+```
+
+changing `POSTGRES_PASSWORD` in Compose does not automatically reset the
+password inside the existing database volume.
+
+Do **not** delete a volume containing important data just to fix
+credentials.
+
+------------------------------------------------------------------------
+
+## Multiple Heads
+
+Check:
+
+``` bash
+alembic heads
+```
+
+Multiple heads usually mean separate migration branches were created.
+
+Resolve intentionally rather than randomly deleting migration files.
+Alembic supports merge revisions when branches genuinely need to be
+combined.
+
+------------------------------------------------------------------------
+
+# Production Rules
+
+1.  Keep migration files in Git.
+2.  Commit model changes and their migration together.
+3.  Review autogenerated migrations.
+4.  Back up important databases before destructive migrations.
+5.  Do not use `Base.metadata.create_all()` as a replacement for
+    migrations in production.
+6.  Never manually edit the `alembic_version` table during normal
+    operation.
+7.  Do not delete old applied migration files just because they look
+    unnecessary.
+8.  Test both upgrade behavior and important rollback/recovery
+    procedures.
+9.  Prefer backward-compatible migrations for zero-downtime deployments.
+10. Treat column/table drops and type changes as potentially destructive
+    operations.
+
+------------------------------------------------------------------------
+
+# Quick Cheat Sheet
+
+``` bash
+# Start database
+docker compose up -d postgres
+
+# Check database container
+docker compose ps
+
+# Create migration after changing models
+alembic revision --autogenerate -m "describe change"
+
+# IMPORTANT: review generated migration file here
+
+# Apply migrations
+alembic upgrade head
+
+# Check current revision
+alembic current
+
+# View history
+alembic history
+
+# Roll back one revision
+alembic downgrade -1
+
+# PostgreSQL logs
+docker compose logs -f postgres
+```
+
+## Mental Model
+
+Remember:
+
+``` text
+SQLAlchemy Model != Database automatically
+
+Model change
+   ↓
+Alembic migration
+   ↓
+Review
+   ↓
+alembic upgrade head
+   ↓
+Database schema changes
+```
