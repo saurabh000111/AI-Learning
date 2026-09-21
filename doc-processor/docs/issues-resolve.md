@@ -32,3 +32,10 @@ python -m venv --prompt doc-processor .venv
 
 ## Activate it normally. Your terminal will now show (doc-processor) again.
 .\.venv\Scripts\activate
+
+
+## to run test 
+uv run python tests/test_password.py
+
+## to print folder structure
+tree src /F
