@@ -26,7 +26,7 @@ class UserRepository:
         user = User(email=email, password_hash=password_hash)
 
         self.session.add(user)
-        await self.session.commit()
+        await self.session.flush()
         await self.session.refresh(user)
 
         return user

@@ -16,6 +16,7 @@ dependencies = [
     "psycopg[binary]>=3.3.6",
     "pydantic-settings>=2.7.0",
     "sqlalchemy>=2.0.54",
+    "starlette>=1.6.0",
 ]
 
 [dependency-groups]
