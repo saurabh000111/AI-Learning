@@ -1,11 +1,14 @@
 from doc_processor.core.security import hash_password
-from doc_processor.exceptions.user_already_exists_error import UserAlreadyExistsError
+from doc_processor.exceptions import UserAlreadyExistsError
 from doc_processor.models.user import User
 from doc_processor.repositories.user_repository import UserRepository
 
 
 class AuthService:
-    def __init__(self, user_repository: UserRepository):
+    def __init__(
+        self,
+        user_repository: UserRepository,
+    ) -> None:
         self.user_repository = user_repository
 
     async def register(
@@ -26,5 +29,7 @@ class AuthService:
             email=normalized_email,
             password_hash=password_hash,
         )
+        # Access the session directly from the repository and commit
+        await self.user_repository.session.commit()
 
         return user

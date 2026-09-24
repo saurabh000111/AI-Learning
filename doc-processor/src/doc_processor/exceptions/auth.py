@@ -1,5 +1,5 @@
 from doc_processor.core.error_codes import ErrorCode
-from exceptions import AppException
+from doc_processor.exceptions.base import AppException
 
 
 class InvalidCredentialsError(AppException):

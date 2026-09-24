@@ -17,7 +17,7 @@ ERROR_DEFINITIONS: dict[ErrorCode, ErrorDefinition] = {
         message="An unexpected error occurred.",
     ),
     ErrorCode.VALIDATION_ERROR: ErrorDefinition(
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         message="Request validation failed.",
     ),
     ErrorCode.BAD_REQUEST: ErrorDefinition(
