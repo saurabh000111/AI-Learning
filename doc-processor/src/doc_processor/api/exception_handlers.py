@@ -8,6 +8,7 @@ from doc_processor.core.error_codes import ErrorCode
 from doc_processor.core.error_definitions import ERROR_DEFINITIONS
 from doc_processor.exceptions.base import AppException
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -71,7 +72,9 @@ async def validation_exception_handler(
     details = {
         "fields": [
             {
-                "field": ".".join(str(part) for part in error["loc"]),
+                "field": ".".join(
+                    str(part) for part in error["loc"]
+                ),
                 "message": error["msg"],
                 "type": error["type"],
             }
@@ -90,7 +93,7 @@ async def validation_exception_handler(
     )
 
     return JSONResponse(
-        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={
             "error": {
                 "code": ErrorCode.VALIDATION_ERROR,
