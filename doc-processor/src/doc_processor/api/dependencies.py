@@ -27,8 +27,9 @@ UserRepositoryDep = Annotated[
 
 def get_auth_service(
     user_repository: UserRepositoryDep,
+    db_session: DbSession,
 ) -> AuthService:
-    return AuthService(user_repository)
+    return AuthService(user_repository, db_session)
 
 
 AuthServiceDep = Annotated[
