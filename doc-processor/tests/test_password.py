@@ -3,10 +3,12 @@ from doc_processor.core.security import (
     verify_password,
 )
 
-password = "TestPassword123!"
 
-hashed = hash_password(password)
+def test_password_hash_and_verify_round_trip() -> None:
+    password = "TestPassword123!"
 
-print("Hash:", hashed)
-print("Correct:", verify_password(password, hashed))
-print("Wrong:", verify_password("wrong-password", hashed))
+    hashed = hash_password(password)
+
+    assert hashed != password
+    assert verify_password(password, hashed) is True
+    assert verify_password("wrong-password", hashed) is False
