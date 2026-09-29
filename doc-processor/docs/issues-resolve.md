@@ -39,3 +39,10 @@ uv run python tests/test_password.py
 
 ## to print folder structure
 tree src /F
+
+
+## once you create new db model or changes made in existing models present in doc_processor/models folder alway run below commands 
+ uv run alembic revision --autogenerate -m "Added new model or updated the existing"
+
+ uv run alembic current
+ uv run alembic upgrade head

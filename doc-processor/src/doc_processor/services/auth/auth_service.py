@@ -1,14 +1,16 @@
-from doc_processor.core.security import hash_password
-from doc_processor.exceptions import UserAlreadyExistsError
-from doc_processor.models.user import User
-from doc_processor.repositories.user_repository import UserRepository
-from doc_processor.db.session import AsyncSession
 from doc_processor.core.jwt import create_access_token
-from doc_processor.core.security import verify_password
+from doc_processor.core.security import hash_password, verify_password
+from doc_processor.db.session import AsyncSession
+from doc_processor.exceptions import UserAlreadyExistsError
 from doc_processor.exceptions.auth import InvalidCredentialsError
+from doc_processor.models.users import User
+from doc_processor.repositories.user_repository import UserRepository
+
 
 class AuthService:
-    def __init__(self, user_repository: UserRepository, db_session: AsyncSession) -> None:
+    def __init__(
+        self, user_repository: UserRepository, db_session: AsyncSession
+    ) -> None:
         self.user_repository = user_repository
         self.db_session = db_session
 
@@ -28,12 +30,14 @@ class AuthService:
         # Leaving the block successfully commits; an exception rolls back.
         return user
 
-    async def login(self, email: str, password: str,) -> str:
+    async def login(
+        self,
+        email: str,
+        password: str,
+    ) -> str:
         normalized_email = email.strip().lower()
 
-        user = await self.user_repository.get_by_email(
-            normalized_email
-        )
+        user = await self.user_repository.get_by_email(normalized_email)
 
         if user is None:
             raise InvalidCredentialsError()
