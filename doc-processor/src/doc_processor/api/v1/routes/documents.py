@@ -6,7 +6,7 @@ from doc_processor.api.dependencies import (
     CurrentUserDep,
     DocumentServiceDep,
 )
-from doc_processor.schemas.documents import DocumentResponse
+from doc_processor.schemas.documents import DocumentResponse, ProcessingStatusResponse
 
 router = APIRouter(prefix="/documents")
 
@@ -151,3 +151,29 @@ async def delete_document(
         )
 
     return DocumentResponse.model_validate(document)
+
+
+@router.get(
+    "/{document_id}/status",
+    response_model=ProcessingStatusResponse,
+)
+async def get_document_processing_status(
+    document_id: uuid.UUID,
+    current_user: CurrentUserDep,
+    document_service: DocumentServiceDep,
+) -> ProcessingStatusResponse:
+    job = await document_service.get_owned_processing_job(
+        document_id=document_id,
+        user_id=current_user.id,
+    )
+
+    if job is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document or processing job not found.",
+        )
+
+    return ProcessingStatusResponse(
+        document_id=job.document_id,
+        status=job.status,
+    )

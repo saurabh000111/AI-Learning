@@ -34,3 +34,7 @@ def delete_pdf(document_id: uuid.UUID) -> None:
     file_path = upload_dir / f"{document_id}.pdf"
 
     file_path.unlink(missing_ok=True)
+
+
+def get_pdf_path(document_id: uuid.UUID) -> Path:
+    return settings.upload_dir / f"{document_id}.pdf"

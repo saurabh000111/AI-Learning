@@ -1,4 +1,5 @@
 import uuid
+from datetime import UTC, datetime
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -74,3 +75,23 @@ class DocumentRepository:
         result = await self.session.execute(statement)
 
         return list(result.scalars().all())
+
+    async def save_processing_result(
+        self,
+        document_id: uuid.UUID,
+        extracted_text: str,
+        page_count: int,
+    ) -> Document:
+        statement = select(Document).where(Document.id == document_id)
+        result = await self.session.execute(statement)
+        document = result.scalar_one_or_none()
+
+        if document is None:
+            raise LookupError(f"Document {document_id} does not exist")
+
+        document.extracted_text = extracted_text
+        document.page_count = page_count
+        document.processed_at = datetime.now(UTC)
+
+        await self.session.flush()
+        return document

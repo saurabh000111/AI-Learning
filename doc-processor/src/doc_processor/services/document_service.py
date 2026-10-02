@@ -7,7 +7,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from doc_processor.exceptions.database import DatabaseError
 from doc_processor.models.documents import Document
+from doc_processor.models.job_processing import ProcessingJob
 from doc_processor.repositories.document_repository import DocumentRepository
+from doc_processor.repositories.processing_job_repository import ProcessingJobRepository
 from doc_processor.storage.local import delete_pdf, save_pdf
 
 logger = logging.getLogger(__name__)
@@ -18,9 +20,11 @@ class DocumentService:
         self,
         document_repository: DocumentRepository,
         session: AsyncSession,
+        processing_job_repository: ProcessingJobRepository,
     ) -> None:
         self.document_repository = document_repository
         self.session = session
+        self.processing_job_repository = processing_job_repository
 
     async def get_owned_document(
         self,
@@ -117,6 +121,8 @@ class DocumentService:
                 document_id=document_id, user_id=user_id, filename=filename
             )
 
+            job = await self.processing_job_repository.create(document_id=document_id)
+
             await self.session.commit()
             return document
 
@@ -142,3 +148,17 @@ class DocumentService:
                 raise DatabaseError() from exc
 
             raise
+
+    async def get_owned_processing_job(
+        self,
+        document_id: uuid.UUID,
+        user_id: uuid.UUID,
+    ) -> ProcessingJob | None:
+        document = await self.document_repository.get_by_id_for_user(
+            document_id,
+            user_id,
+        )
+        if document is None:
+            return None
+
+        return await self.processing_job_repository.get_by_document_id(document_id)
