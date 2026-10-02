@@ -96,8 +96,9 @@ DocumentRepositoryDep = Annotated[
 
 def get_document_service(
     document_repository: DocumentRepositoryDep,
+    session: DbSession,
 ) -> DocumentService:
-    return DocumentService(document_repository)
+    return DocumentService(document_repository, session)
 
 
 DocumentServiceDep = Annotated[

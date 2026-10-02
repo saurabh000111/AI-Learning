@@ -1,12 +1,12 @@
-from datetime import datetime, timedelta, UTC
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 import jwt
-
-from doc_processor.core.config import settings
 from jwt.exceptions import InvalidTokenError
 
+from doc_processor.core.config import settings
 from doc_processor.exceptions.auth import UnauthorizedError
+
 
 def create_access_token(user_id: UUID) -> str:
     now = datetime.now(UTC)
