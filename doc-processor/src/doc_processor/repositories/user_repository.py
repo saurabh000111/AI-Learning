@@ -13,7 +13,7 @@ from doc_processor.exceptions import (
     DatabaseUnavailableError,
     UserAlreadyExistsError,
 )
-from doc_processor.models.user import User
+from doc_processor.models.users import User
 
 logger = logging.getLogger(__name__)
 
@@ -33,18 +33,14 @@ class UserRepository:
         except OperationalError as exc:
             await self.session.rollback()
 
-            logger.exception(
-                "Database unavailable while fetching user."
-            )
+            logger.exception("Database unavailable while fetching user.")
 
             raise DatabaseUnavailableError() from exc
 
         except SQLAlchemyError as exc:
             await self.session.rollback()
 
-            logger.exception(
-                "Database error while fetching user."
-            )
+            logger.exception("Database error while fetching user.")
 
             raise DatabaseError(
                 message="Database error while fetching user.",
@@ -61,18 +57,14 @@ class UserRepository:
         except OperationalError as exc:
             await self.session.rollback()
 
-            logger.exception(
-                "Database unavailable while fetching user."
-            )
+            logger.exception("Database unavailable while fetching user.")
 
             raise DatabaseUnavailableError() from exc
 
         except SQLAlchemyError as exc:
             await self.session.rollback()
 
-            logger.exception(
-                "Database error while fetching user."
-            )
+            logger.exception("Database error while fetching user.")
 
             raise DatabaseError(
                 message="Database error while fetching user.",
@@ -101,15 +93,12 @@ class UserRepository:
 
             if self._is_unique_violation(exc):
                 logger.warning(
-                    "User creation failed because a unique constraint "
-                    "was violated."
+                    "User creation failed because a unique constraint was violated."
                 )
 
                 raise UserAlreadyExistsError() from exc
 
-            logger.exception(
-                "Database integrity error while creating user."
-            )
+            logger.exception("Database integrity error while creating user.")
 
             raise DatabaseError(
                 message="Database integrity error while creating user.",
@@ -118,18 +107,14 @@ class UserRepository:
         except OperationalError as exc:
             await self.session.rollback()
 
-            logger.exception(
-                "Database unavailable while creating user."
-            )
+            logger.exception("Database unavailable while creating user.")
 
             raise DatabaseUnavailableError() from exc
 
         except SQLAlchemyError as exc:
             await self.session.rollback()
 
-            logger.exception(
-                "Database error while creating user."
-            )
+            logger.exception("Database error while creating user.")
 
             raise DatabaseError(
                 message="Database error while creating user.",
@@ -141,8 +126,11 @@ class UserRepository:
     ) -> bool:
         original_exception = exc.orig
 
-        return getattr(
-            original_exception,
-            "sqlstate",
-            None,
-        ) == "23505"
+        return (
+            getattr(
+                original_exception,
+                "sqlstate",
+                None,
+            )
+            == "23505"
+        )

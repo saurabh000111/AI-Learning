@@ -5,7 +5,7 @@ from doc_processor.core.config import settings
 from doc_processor.db.base import Base
 
 # Import models so SQLAlchemy registers their tables with Base.metadata
-from doc_processor.models.user import User  # noqa: F401
+from doc_processor.models import *
 from sqlalchemy import engine_from_config, pool
 
 # this is the Alembic Config object, which provides

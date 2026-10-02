@@ -4,7 +4,7 @@ from uuid import uuid4
 import pytest
 from doc_processor.api.dependencies import get_current_user
 from doc_processor.exceptions.auth import UnauthorizedError
-from doc_processor.models.user import User
+from doc_processor.models.users import User
 from fastapi.security import HTTPAuthorizationCredentials
 
 
