@@ -56,7 +56,17 @@ class DocumentService:
 
             if document is not None:
                 await self.session.commit()
-                await asyncio.to_thread(delete_pdf, document_id)
+                try:
+                    await asyncio.to_thread(delete_pdf, document_id)
+                except OSError:
+                    logger.exception(
+                        "Document record deleted but PDF cleanup failed "
+                        "for document %s and user %s",
+                        document_id,
+                        user_id,
+                    )
+                    raise
+
                 logger.info("Deleted document %s for user %s", document_id, user_id)
 
             return document
@@ -124,6 +134,7 @@ class DocumentService:
             job = await self.processing_job_repository.create(document_id=document_id)
 
             await self.session.commit()
+            logger.info("Uploaded document %s for user %s", document_id, user_id)
             return document
 
         except Exception as exc:

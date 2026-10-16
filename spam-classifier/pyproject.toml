@@ -1,0 +1,23 @@
+[project]
+name = "spam-classifier"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "saurabh000111", email = "32452795+saurabh000111@users.noreply.github.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "joblib>=1.6.0",
+    "matplotlib>=3.11.2",
+    "numpy>=2.5.3",
+    "pandas>=3.0.6",
+    "scikit-learn>=1.9.1",
+]
+
+[project.scripts]
+spam-classifier = "spam_classifier:main"
+
+[build-system]
+requires = ["uv_build>=0.12.23,<0.13.0"]
+build-backend = "uv_build"

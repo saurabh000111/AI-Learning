@@ -1,3 +1,5 @@
+import logging
+
 from doc_processor.core.jwt import create_access_token
 from doc_processor.core.security import hash_password, verify_password
 from doc_processor.db.session import AsyncSession
@@ -5,6 +7,8 @@ from doc_processor.exceptions import UserAlreadyExistsError
 from doc_processor.exceptions.auth import InvalidCredentialsError
 from doc_processor.models.users import User
 from doc_processor.repositories.user_repository import UserRepository
+
+logger = logging.getLogger(__name__)
 
 
 class AuthService:
@@ -28,6 +32,7 @@ class AuthService:
             )
 
         # Leaving the block successfully commits; an exception rolls back.
+        logger.info("Registered user %s", user.id)
         return user
 
     async def login(
@@ -50,4 +55,5 @@ class AuthService:
 
         access_token = create_access_token(user.id)
 
+        logger.info("User %s logged in", user.id)
         return access_token

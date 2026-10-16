@@ -8,7 +8,6 @@ from doc_processor.core.error_codes import ErrorCode
 from doc_processor.core.error_definitions import ERROR_DEFINITIONS
 from doc_processor.exceptions.base import AppException
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -39,7 +38,12 @@ async def app_exception_handler(
 
     request_id = _get_request_id(request)
 
-    logger.warning(
+    log = (
+        logger.error
+        if status_code >= status.HTTP_500_INTERNAL_SERVER_ERROR
+        else logger.warning
+    )
+    log(
         "Application error",
         extra={
             "error_code": exc.code,
@@ -110,6 +114,17 @@ async def http_exception_handler(
     exc: HTTPException,
 ) -> JSONResponse:
     request_id = _get_request_id(request)
+
+    if exc.status_code >= status.HTTP_500_INTERNAL_SERVER_ERROR:
+        logger.error(
+            "HTTP server error",
+            extra={
+                "status_code": exc.status_code,
+                "request_id": request_id,
+                "path": request.url.path,
+                "method": request.method,
+            },
+        )
 
     return JSONResponse(
         status_code=exc.status_code,
